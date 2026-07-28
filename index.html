@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REALITY EDITOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Chakra+Petch:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ======== STAGE ======== -->
+  <div id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="gl"></canvas>       <!-- WebGL composite: reality + effects -->
+    <canvas id="overlay"></canvas>  <!-- 2D: particles, selection path, hand cursor -->
+
+    <!-- ======== HOLOGRAPHIC HUD ======== -->
+    <div id="hud">
+      <div class="hud-corner tl"></div>
+      <div class="hud-corner tr"></div>
+      <div class="hud-corner bl"></div>
+      <div class="hud-corner br"></div>
+
+      <div id="hud-top">
+        <div class="hud-block">
+          <span class="hud-label">REALITY EDITOR</span>
+          <span class="hud-sub" id="hud-source">SENSOR: —</span>
+        </div>
+        <div class="hud-block center">
+          <span class="hud-effect" id="hud-effect">NO TRANSFORM</span>
+          <span class="hud-sub" id="hud-effect-sub">trace a region to begin</span>
+        </div>
+        <div class="hud-block right">
+          <span class="hud-sub" id="hud-hands">HANDS: 0</span>
+          <span class="hud-sub" id="hud-voice">VOICE: OFF</span>
+          <span class="hud-sub" id="hud-lock"></span>
+        </div>
+      </div>
+
+      <div id="hud-bottom">
+        <div class="hud-gestures">
+          <span>☝ TRACE</span><span>🤏 CONFIRM / MOVE</span><span>✌ NEXT POWER</span>
+          <span>🤏🤏 SCALE + ROTATE</span><span>👍 DUPLICATE</span><span>🖐 LOCK</span><span>✊ ERASE</span>
+        </div>
+      </div>
+
+      <div id="hud-toast"></div>
+      <div id="scanlines"></div>
+      <div id="vignette"></div>
+    </div>
+  </div>
+
+  <!-- ======== BOOT SCREEN ======== -->
+  <div id="boot">
+    <div class="boot-inner">
+      <div class="boot-glyph">◈</div>
+      <h1 class="boot-title">REALITY<br>EDITOR</h1>
+      <p class="boot-tag">the world is a draft. your hands hold the pen.</p>
+      <div class="boot-lines">
+        <span data-line>calibrating spacetime lattice…</span>
+        <span data-line>loading dimension library…</span>
+        <span data-line>arming gesture matrix…</span>
+      </div>
+      <button id="boot-btn">⟡ INITIALIZE SENSOR</button>
+      <p class="boot-hint">camera + microphone stay on this device. nothing is uploaded.</p>
+    </div>
+  </div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <script src="./engine.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #0a0a0b; height: 100%; overflow: hidden; }
+    a { color: #e4e4e7; text-decoration: none; }
+    a:hover { color: #d4d4d8; }
+    @keyframes re-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+    @keyframes re-fadeup { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes re-scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
+  </style>
+</helmet>
+
+<div ref="{{ stageRef }}" style="position: fixed; inset: 0; background: #0a0a0b; overflow: hidden; font-family: 'IBM Plex Mono', monospace; cursor: crosshair;" data-screen-label="Reality Editor">
+
+  <video ref="{{ videoRef }}" autoplay="{{ true }}" muted="{{ true }}" playsinline="{{ true }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .8s ease;"></video>
+
+  <canvas ref="{{ fxRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+  <canvas ref="{{ uiRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+
+  <div style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);"></div>
+
+
+  <div style="position: absolute; top: 18px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none;">
+    <div style="display: flex; align-items: center; gap: 9px;">
+      <span style="width: 6px; height: 6px; border-radius: 50%; background: #a1a1aa; box-shadow: 0 0 8px #a1a1aa; animation: re-pulse 2s infinite;"></span>
+      <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .24em; color: rgba(231,249,255,.85); text-shadow: 0 1px 6px rgba(0,0,0,.6);">REALITY EDITOR</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <sc-if value="{{ showCamBtn }}" hint-placeholder-val="{{ false }}">
+        <span onClick="{{ enableCamera }}" style="pointer-events: auto; cursor: pointer; background: rgba(212,212,216,.14); border: 1px solid #a1a1aa; border-radius: 6px; padding: 8px 12px; font-size: 10px; font-weight: 600; letter-spacing: .14em; color: #e4e4e7; box-shadow: 0 0 14px rgba(212,212,216,.3); animation: re-pulse 2.4s infinite;">{{ camBtnLabel }}</span>
+      </sc-if>
+      <span onClick="{{ toggleShape }}" style="pointer-events: auto; cursor: pointer; user-select: none; background: rgba(9,9,11,.72); border: 1px solid rgba(212,212,216,.24); border-radius: 6px; padding: 6px 10px; font-size: 9px; letter-spacing: .14em; color: #e4e4e7;">{{ shapeLabel }}</span>
+      <span onClick="{{ toggleVoice }}" style="pointer-events: auto; cursor: pointer; user-select: none; background: rgba(9,9,11,.72); border: 1px solid rgba(212,212,216,.24); border-radius: 6px; padding: 6px 10px; font-size: 9px; letter-spacing: .14em; color: #e4e4e7;">{{ voiceLabel }}</span>
+      <span style="background: rgba(9,9,11,.72); border: 1px solid rgba(212,212,216,.18); border-radius: 6px; padding: 6px 10px; font-size: 9px; letter-spacing: .14em; color: #a1a1aa;">{{ statusText }}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{ hasTranscript }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 62px; left: 50%; transform: translateX(-50%); pointer-events: none; background: rgba(9,9,11,.72); border: 1px solid rgba(212,212,216,.2); border-radius: 6px; padding: 6px 14px; font-size: 11px; letter-spacing: .06em; color: #e4e4e7; font-style: italic; max-width: 60vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">“{{ transcript }}”</div>
+  </sc-if>
+
+  <div style="position: absolute; left: 20px; bottom: 22px; pointer-events: none; background: rgba(9,9,11,.72); border: 1px solid rgba(212,212,216,.2); border-radius: 6px; padding: 7px 12px; font-size: 10px; letter-spacing: .16em; color: #d4d4d8;">{{ stateLabel }}</div>
+
+  <div style="position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 7px;">
+    <div style="display: flex; gap: 8px;">
+      <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="4">
+        <div onClick="{{ chip.select }}" style="position: relative; cursor: pointer; background: rgba(9,9,11,.72); border: 1px solid rgba(140,170,200,.2); border-radius: 6px; padding: 6px 11px; font-size: 9px; font-weight: 600; letter-spacing: .14em; color: #d4d4d8; user-select: none; display: flex; align-items: center; gap: 7px;">
+          <sc-if value="{{ chip.active }}" hint-placeholder-val="{{ false }}">
+            <span style="position: absolute; inset: -1px; border: 1px solid #e4e4e7; border-radius: 6px; background: rgba(212,212,216,.10); box-shadow: 0 0 14px rgba(212,212,216,.35), inset 0 0 10px rgba(212,212,216,.12); pointer-events: none;"></span>
+          </sc-if>
+          <span style="font-size: 8px; opacity: .55;">{{ chip.num }}</span>
+          <span>{{ chip.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size: 8px; letter-spacing: .18em; color: rgba(161,161,170,.35); pointer-events: none;">PALM HOLD · NEW ZONE &nbsp;·&nbsp; FIST HOLD · ERASE &nbsp;·&nbsp; TAP A CHIP TO SWITCH POWER</div>
+  </div>
+
+  <sc-if value="{{ showIntro }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ dismissIntro }}" style="position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; background: radial-gradient(ellipse at 50% 40%, rgba(18,18,20,.9), rgba(5,5,6,.97)); backdrop-filter: blur(6px); cursor: pointer;">
+      <div style="overflow: hidden; position: absolute; inset: 0; pointer-events: none;">
+        <div style="position: absolute; left: 0; right: 0; height: 120px; background: linear-gradient(180deg, transparent, rgba(212,212,216,.05), transparent); animation: re-scan 7s linear infinite;"></div>
+      </div>
+      <div style="font-size: 11px; letter-spacing: .38em; color: #e4e4e7; margin-bottom: 18px; animation: re-fadeup .8s ease both;">HAND-GESTURE AR · LIVE PROTOTYPE</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(42px, 7vw, 84px); letter-spacing: .06em; color: #fafafa; text-shadow: 0 0 34px rgba(212,212,216,.45); line-height: 1; animation: re-fadeup .8s .1s ease both;">REALITY EDITOR</div>
+      <div style="font-size: 13px; color: rgba(228,228,231,.6); margin-top: 16px; letter-spacing: .06em; animation: re-fadeup .8s .2s ease both;">Select a piece of the world. Rewrite its rules.</div>
+
+      <div style="display: flex; gap: 14px; margin-top: 44px; flex-wrap: wrap; justify-content: center; max-width: 860px; animation: re-fadeup .8s .3s ease both;">
+        <sc-for list="{{ introSteps }}" as="step" hint-placeholder-count="4">
+          <div style="width: 172px; background: rgba(12,12,14,.7); border: 1px solid rgba(212,212,216,.2); border-radius: 8px; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="align-self: flex-start; font-size: 10px; font-weight: 600; letter-spacing: .14em; color: #0a0a0b; background: #e4e4e7; border-radius: 4px; padding: 3px 8px;">{{ step.k }}</span>
+            <span style="font-size: 11px; line-height: 1.55; color: rgba(212,212,216,.75);">{{ step.desc }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showCamBtn }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ enableCamera }}" style="margin-top: 38px; cursor: pointer; background: rgba(212,212,216,.14); border: 1px solid #a1a1aa; border-radius: 8px; padding: 13px 26px; font-size: 12px; font-weight: 600; letter-spacing: .22em; color: #e4e4e7; box-shadow: 0 0 24px rgba(212,212,216,.35); animation: re-fadeup .8s .35s ease both;">{{ camBtnLabel }}</div>
+      </sc-if>
+      <sc-if value="{{ showCamHelp }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 16px; max-width: 560px; text-align: center; font-size: 11px; line-height: 1.7; letter-spacing: .08em; color: #d4d4d8; background: rgba(24,24,27,.5); border: 1px solid rgba(212,212,216,.3); border-radius: 8px; padding: 10px 18px;">{{ camHelp }}</div>
+      </sc-if>
+      <div style="margin-top: 18px; font-size: 11px; letter-spacing: .24em; color: #d4d4d8; animation: re-pulse 2.2s infinite;">{{ introStatus }}</div>
+      <div style="margin-top: 10px; font-size: 10px; letter-spacing: .1em; color: rgba(161,161,170,.4);">Camera-only. Tap ○ VOICE (top right) and speak: “make this underwater” · “freeze time” · “black hole” · “clear”. Nothing is recorded or uploaded.</div>
+    </div>
+  </sc-if>
+
+  <template id="__bundler_thumbnail">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#060a14"></rect><rect x="30" y="34" width="40" height="32" rx="3" fill="none" stroke="#e4e4e7" stroke-width="2.5" stroke-dasharray="7 4"></rect><circle cx="50" cy="50" r="4" fill="#a1a1aa"></circle></svg>
+  </template>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;effectIntensity&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.85, &quot;min&quot;: 0.2, &quot;max&quot;: 1, &quot;step&quot;: 0.05, &quot;section&quot;: &quot;Engine&quot;, &quot;tsType&quot;: &quot;number&quot; },
+  &quot;showHandSkeleton&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;section&quot;: &quot;Engine&quot;, &quot;tsType&quot;: &quot;boolean&quot; },
+  &quot;performanceMode&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;auto&quot;, &quot;options&quot;: [&quot;auto&quot;, &quot;quality&quot;, &quot;speed&quot;], &quot;section&quot;: &quot;Engine&quot;, &quot;tsType&quot;: &quot;string&quot; }
+}">
+const POWERS = [
+  { id: 'hologram', label: 'SELECT', color: '#e4e4e7' },
+  { id: 'antigravity', label: 'GRAVITY OFF', color: '#d4d4d8' },
+  { id: 'freeze', label: 'FREEZE TIME', color: '#f4f4f5' },
+  { id: 'twist', label: 'SPACE TWIST', color: '#c0c3c9' },
+  { id: 'cosmic', label: 'BLACK HOLE', color: '#9ca3af' },
+  { id: 'underwater', label: 'OCEAN', color: '#d4d4d8' },
+  { id: 'cyberpunk', label: 'NEON CITY', color: '#e4e4e7' },
+  { id: 'lava', label: 'LAVA', color: '#c0c3c9' },
+  { id: 'pixel', label: 'PIXEL', color: '#f4f4f5' },
+  { id: 'void', label: 'VOID', color: '#9ca3af' },
+  { id: 'thermal', label: 'THERMAL', color: '#e4e4e7' },
+  { id: 'holo', label: 'HOLOGRAM', color: '#d4d4d8' },
+];
+
+class Component extends DCLogic {
+  state = {
+    showIntro: true,
+    transcript: '',
+    voiceOn: false,
+    voiceSupported: true,
+    stateLabel: 'INITIALIZING',
+    mode: 'boot',
+    fps: 0,
+    powerIdx: 0,
+    handsSeen: 0,
+    cameraOK: null,
+  };
+
+  constructor(props) {
+    super(props);
+    this.stageRef = React.createRef();
+    this.videoRef = React.createRef();
+    this.fxRef = React.createRef();
+    this.uiRef = React.createRef();
+  }
+
+  componentDidMount() {
+    let tries = 0;
+    const boot = () => {
+      if (this._unmounted) return;
+      if (!window.createRealityEngine) {
+        if (++tries > 150) { this.setState({ stateLabel: 'ENGINE FAILED — RELOAD PAGE', mode: 'error' }); return; }
+        setTimeout(boot, 100);
+        return;
+      }
+      try {
+        this.engine = window.createRealityEngine({
+          stage: this.stageRef.current,
+          video: this.videoRef.current,
+          fx: this.fxRef.current,
+          ui: this.uiRef.current,
+          intensity: this.props.effectIntensity ?? 0.85,
+          skeleton: this.props.showHandSkeleton ?? false,
+          perfMode: this.props.performanceMode ?? 'auto',
+          onUpdate: (s) => this.setState(s),
+          onPresence: () => this.setState({ showIntro: false }),
+        });
+        this.engine.start();
+        this.voice = window.createRealityVoice ? window.createRealityVoice({
+          onPower: (id) => this.engine && this.engine.setPowerById(id),
+          onClear: () => this.engine && this.engine.clearSel(),
+          onTranscript: (txt, fin) => {
+            clearTimeout(this._trT);
+            this.setState({ transcript: txt });
+            this._trT = setTimeout(() => this.setState({ transcript: '' }), fin ? 2600 : 5000);
+          },
+          onShape: (m) => { this.setState({ shapeMode: m }); this.engine && this.engine.setShape(m); },
+          onState: (onn) => this.setState({ voiceOn: onn }),
+        }) : null;
+        if (!this.voice) this.setState({ voiceSupported: false });
+      } catch (err) {
+        console.info('[reality] engine failed to boot:', err && err.message);
+        this.setState({ stateLabel: 'ENGINE FAILED — RELOAD PAGE', mode: 'error' });
+      }
+    };
+    boot();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (!this.engine) return;
+    if (prevProps.effectIntensity !== this.props.effectIntensity || prevProps.showHandSkeleton !== this.props.showHandSkeleton || prevProps.performanceMode !== this.props.performanceMode) {
+      this.engine.setOpts({
+        intensity: this.props.effectIntensity ?? 0.85,
+        skeleton: this.props.showHandSkeleton ?? false,
+        perfMode: this.props.performanceMode ?? 'auto',
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    this._unmounted = true;
+    if (this.engine) this.engine.destroy();
+    if (this.voice) try { this.voice.stop(); } catch (e) {}
+  }
+
+  renderVals() {
+    const s = this.state;
+    const chips = POWERS.map((p, i) => ({
+      label: p.label,
+      num: String(i + 1).padStart(2, '0'),
+      active: i === s.powerIdx,
+      select: () => { if (this.engine) this.engine.setPower(i); else this.setState({ powerIdx: i }); },
+    }));
+
+    const handSteps = [
+      { k: 'SUMMON', desc: 'Raise an open hand — a zone appears around your palm and follows it.' },
+      { k: 'SHAPE', desc: 'Spread your fingers to grow it. Use both hands to stretch it wide between your palms.' },
+      { k: 'LOCK', desc: 'Snap your hand shut — a fist (or a pinch) locks the zone onto reality.' },
+      { k: 'CONTROL', desc: 'Pinch inside to drag it. Hold an open palm for a new zone. Hold a fist to erase.' },
+    ];
+
+    const modeLabel = ({ boot: 'BOOTING', hands: 'HAND TRACKING', nocam: 'CAMERA REQUIRED', notrack: 'TRACKER ERROR', error: 'ERROR' }[s.mode] || '—') + (s.cameraOK ? ' · CAM LIVE' : ' · CAM OFF');
+    const statusText = s.mode === 'hands'
+      ? (s.fps || 0) + ' FPS · AI ' + (s.trackMs || 0) + 'MS'
+      : modeLabel;
+    let introStatus = 'INITIALIZING CAMERA & TRACKER…';
+    if (s.mode === 'hands') introStatus = 'RAISE YOUR HAND TO BEGIN';
+    else if (s.mode === 'nocam') introStatus = 'THIS EXPERIENCE REQUIRES YOUR CAMERA';
+    else if (s.mode === 'notrack') introStatus = 'HAND TRACKER FAILED TO LOAD — CHECK CONNECTION, THEN RELOAD';
+
+    const showCamBtn = s.cameraOK === false;
+    const camBlocked = !!s.camBlocked;
+    const downloadApp = async () => {
+      if (this._dlBusy) return;
+      this._dlBusy = true;
+      this.setState({ dlMsg: 'PREPARING FILE…' });
+      try {
+        const r = await fetch(window.location.href, { cache: 'force-cache' });
+        const txt = await r.text();
+        if (!r.ok || txt.indexOf('src="./support.js"') !== -1) throw new Error('not standalone');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([txt], { type: 'text/html' }));
+        a.download = 'Reality Editor.html';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+        this.setState({ dlMsg: 'SAVED TO YOUR DOWNLOADS ✓ — DOUBLE-CLICK “Reality Editor.html”, THEN ALLOW THE CAMERA.' });
+      } catch (err) {
+        this.setState({ dlMsg: 'CAN’T DOWNLOAD FROM HERE — USE THE DOWNLOAD CARD IN THE CHAT PANEL INSTEAD.' });
+      }
+      this._dlBusy = false;
+    };
+    const enableCamera = (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
+      if (camBlocked) { downloadApp(); return; }
+      if (this.engine && this.engine.retryCamera) this.engine.retryCamera();
+      else window.location.reload();
+    };
+    const camBtnLabel = camBlocked ? '⬇ DOWNLOAD THE APP — CAMERA WORKS THERE' : '⏻ TURN ON CAMERA / RETRY';
+    let camHelp = '';
+    if (camBlocked) {
+      camHelp = s.dlMsg || 'THIS PREVIEW PANEL BLOCKS ALL CAMERA ACCESS (ITS SECURITY POLICY — NOT FIXABLE BY THE APP). CLICK THE BUTTON: THE APP SAVES AS ONE FILE THAT RUNS WITH FULL CAMERA WHEN YOU OPEN IT.';
+    } else if (s.cameraOK === false && s.camErr) {
+      camHelp = {
+        NotAllowedError: 'PERMISSION DENIED — CLICK THE CAMERA / LOCK ICON IN THE ADDRESS BAR, SET CAMERA TO ALLOW, THEN PRESS RETRY.',
+        NotFoundError: 'NO CAMERA DETECTED ON THIS DEVICE.',
+        NotReadableError: 'CAMERA IS BUSY — ANOTHER APP (ZOOM/TEAMS/OBS) IS USING IT. CLOSE IT, THEN PRESS RETRY.',
+        OverconstrainedError: 'CAMERA REJECTED SETTINGS — PRESS RETRY.',
+        AbortError: 'CAMERA START ABORTED — PRESS RETRY.',
+        SecurityError: 'BROWSER SECURITY BLOCKS CAMERA HERE.',
+      }[s.camErr] || ('CAMERA ERROR: ' + s.camErr + ' — PRESS RETRY.');
+    }
+
+    return {
+      showCamBtn,
+      enableCamera,
+      camBtnLabel,
+      camHelp,
+      showCamHelp: !!camHelp,
+      stageRef: this.stageRef,
+      videoRef: this.videoRef,
+      fxRef: this.fxRef,
+      uiRef: this.uiRef,
+      showIntro: s.showIntro,
+      chips,
+      introSteps: handSteps,
+      introStatus,
+      statusText,
+      toggleVoice: () => { if (this.voice) this.voice.toggle(); },
+      toggleShape: () => {
+        const m = (this.state.shapeMode || 'panel') === 'panel' ? 'circle' : 'panel';
+        this.setState({ shapeMode: m });
+        if (this.engine && this.engine.setShape) this.engine.setShape(m);
+      },
+      shapeLabel: (this.state.shapeMode || 'panel') === 'panel' ? '▭ PANEL' : '◯ CIRCLE',
+      voiceLabel: !s.voiceSupported ? 'VOICE N/A' : (s.voiceOn ? '● VOICE ON' : '○ VOICE'),
+      hasTranscript: !!s.transcript,
+      transcript: s.transcript,
+      stateLabel: s.stateLabel,
+      dismissIntro: (e) => {
+        if (s.mode === 'hands') { this.setState({ showIntro: false }); return; }
+        if (s.cameraOK === false && !camBlocked) enableCamera(e);   // clicking anywhere = retry camera (real-tab contexts only)
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
