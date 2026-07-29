@@ -24,7 +24,7 @@ and turn it into a black hole, an ocean, frozen time, molten lava…<br/>
 </p>
 
 <p align="center">
-  <a href="https://zakriaz.github.io/reality-editor/"><img src="https://socialify.git.ci/ZAKRIAZ/reality-editor/image?description=1&font=Inter&language=1&pattern=Circuit%20Board&theme=Dark" alt="Reality Editor" width="640"/></a>
+  <a href="https://zakriaz.github.io/reality-editor/"><img src="assets/hero.png" alt="Reality Editor" width="720"/></a>
 </p>
 
 ---
