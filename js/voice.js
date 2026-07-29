@@ -34,6 +34,13 @@ const ACTIONS = [
   [['next'],                                                          'cycle'],
 ];
 
+// `includes()` also matches inside longer words: 'lock' fires on "block" and
+// "clock", 'ice' on "nice". Since ACTIONS is checked first and returns early,
+// "turn this into a block of ice" toggled lock instead of applying the frozen
+// effect. Match whole words and phrases only.
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const hasPhrase = (text, phrase) => new RegExp(`\\b${escapeRe(phrase)}\\b`).test(text);
+
 export function startVoice({ onEffect, onAction, onStatus }) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { onStatus('VOICE: N/A'); return null; }
@@ -48,12 +55,12 @@ export function startVoice({ onEffect, onAction, onStatus }) {
     const text = e.results[e.results.length - 1][0].transcript.toLowerCase();
     onStatus('VOICE: "' + text.trim().slice(0, 32) + '"');
     for (const [words, action] of ACTIONS)
-      if (words.some(w => text.includes(w))) { onAction(action); return; }
+      if (words.some(w => hasPhrase(text, w))) { onAction(action); return; }
     // longest keyword match wins ("freeze time" beats "freeze")
     let best = null, bestLen = 0;
     for (const [words, effect] of KEYWORDS)
       for (const w of words)
-        if (text.includes(w) && w.length > bestLen) { best = effect; bestLen = w.length; }
+        if (hasPhrase(text, w) && w.length > bestLen) { best = effect; bestLen = w.length; }
     if (best) onEffect(best);
   };
   rec.onerror = e => { if (e.error === 'not-allowed') { alive = false; onStatus('VOICE: DENIED'); } };
