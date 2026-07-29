@@ -56,7 +56,20 @@ export function startVoice({ onEffect, onAction, onStatus }) {
         if (text.includes(w) && w.length > bestLen) { best = effect; bestLen = w.length; }
     if (best) onEffect(best);
   };
-  rec.onerror = e => { if (e.error === 'not-allowed') { alive = false; onStatus('VOICE: DENIED'); } };
+  // Only 'not-allowed' used to clear `alive`, so an unrecoverable error such as
+  // 'audio-capture' (no microphone) left it true: onend restarted recognition
+  // immediately, which errored again, looping with no backoff and no feedback.
+  const FATAL = {
+    'not-allowed': 'VOICE: DENIED',
+    'service-not-allowed': 'VOICE: DENIED',
+    'audio-capture': 'VOICE: NO MIC',
+  };
+  rec.onerror = e => {
+    const status = FATAL[e.error];
+    if (!status) return;
+    alive = false;
+    onStatus(status);
+  };
   rec.onend = () => { if (alive) { try { rec.start(); } catch (_) {} } };
 
   try { rec.start(); onStatus('VOICE: LISTENING'); }
