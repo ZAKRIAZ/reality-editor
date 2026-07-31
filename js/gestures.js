@@ -92,7 +92,11 @@ export class GestureEngine {
       const ang = Math.atan2(b.pinchPoint.y - a.pinchPoint.y, b.pinchPoint.x - a.pinchPoint.x);
       if (!this.twoHand) this.twoHand = { d, ang };
       else {
-        this.emit('twoHand', { scale: d / this.twoHand.d, rotate: ang - this.twoHand.ang });
+        const dAng = ang - this.twoHand.ang;
+        this.emit('twoHand', {
+          scale: d / this.twoHand.d,
+          rotate: Math.atan2(Math.sin(dAng), Math.cos(dAng)),   // shortest path; no ±π snap
+        });
         this.twoHand = { d, ang };
       }
       this._endGrab(); this._endDraw();
